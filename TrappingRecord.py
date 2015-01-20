@@ -17,10 +17,10 @@ def retrieve_data(query):
 
 #Load Data and and Add 1 to denote that an existing record represents a trapping event
 """The query excludes negative periods and records with notes that indicate that
-the data was not from a normal census"""
+the data was not from a normal census. It includes records tagged as empty plots"""
 query_rats = """SELECT Rodents.period, Rodents.plot, Rodents.note1 FROM Rodents 
                 WHERE (((Rodents.period)>0 AND Rodents.period < 429) AND ((Rodents.note1) Is Null 
-                Or (Rodents.note1)="1" Or (Rodents.note1)="2" 
+                Or (Rodents.note1)="1" Or (Rodents.note1)="2"
                 Or (Rodents.note1)="3" Or (Rodents.note1)="6" 
                 Or (Rodents.note1)="7" Or (Rodents.note1)="10" 
                 Or (Rodents.note1)="11" Or (Rodents.note1)="12" 
@@ -40,3 +40,16 @@ plot_counts = pd.DataFrame(plot_counts)
 plot_counts = plot_counts.rename(columns = {'plot':'plot_count'})
 plot_counts.reset_index(inplace=True)
 periods_missing_plots = plot_counts[plot_counts['plot_count'] < len(plot_list)]
+
+#Find missing plots for a particular given period
+short_periods = periods_missing_plots['period'].unique()
+new_data = pd.DataFrame(columns=['period', 'plot', 'note1', 'sampled'])
+for unique_period in short_periods:
+    short_period_data = raw_sample_data[raw_sample_data['period'] == unique_period]
+    short_period_plots = set(short_period_data['plot'].unique())
+    missing_plots = set(plot_list).difference(short_period_plots)
+    for each_plot in missing_plots:
+        plot_data = pd.DataFrame([[unique_period, each_plot, 4, 0]],
+                                 columns=['period', 'plot', 'note1', 'sampled'])
+        new_data = new_data.append(plot_data, ignore_index=True)
+        

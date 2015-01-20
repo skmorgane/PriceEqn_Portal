@@ -18,7 +18,7 @@ def retrieve_data(query):
 #Load Data and and Add 1 to denote that an existing record represents a trapping event
 """The query excludes negative periods and records with notes that indicate that
 the data was not from a normal census. It includes records tagged as empty plots"""
-query_rats = """SELECT Rodents.period, Rodents.plot, Rodents.note1 FROM Rodents 
+query_rats = """SELECT Rodents.period, Rodents.plot FROM Rodents 
                 WHERE (((Rodents.period)>0 AND Rodents.period < 429) AND ((Rodents.note1) Is Null 
                 Or (Rodents.note1)="1" Or (Rodents.note1)="2"
                 Or (Rodents.note1)="3" Or (Rodents.note1)="6" 
@@ -26,13 +26,17 @@ query_rats = """SELECT Rodents.period, Rodents.plot, Rodents.note1 FROM Rodents
                 Or (Rodents.note1)="11" Or (Rodents.note1)="12" 
                 Or (Rodents.note1)="13" Or (Rodents.note1)="14"))"""
 raw_sample_data = retrieve_data(query_rats)
-raw_sample_data['sampled'] = 1
 
-#purge null plots and null periods
+#purge null plots and null periods and reduce to unique plot/period events 
+# & add column denoting that these records are linked to real trapping events
 raw_sample_data = raw_sample_data.dropna(subset=["plot"])
 raw_sample_data = raw_sample_data.dropna(subset=["period"])
+Trapping_Table = raw_sample_data.drop_duplicates()
+Trapping_Table['sampled'] = 1
 
 #generate table showing which periods are missing plots
+plot_list = raw_sample_data['plot'].unique()
+period_list = raw_sample_data['period'].unique()
 plot_list = raw_sample_data['plot'].unique()
 period_list = raw_sample_data['period'].unique()
 plot_counts = raw_sample_data.groupby('period').plot.nunique()
@@ -43,13 +47,14 @@ periods_missing_plots = plot_counts[plot_counts['plot_count'] < len(plot_list)]
 
 #Find missing plots for a particular given period
 short_periods = periods_missing_plots['period'].unique()
-new_data = pd.DataFrame(columns=['period', 'plot', 'note1', 'sampled'])
+new_data = pd.DataFrame(columns=['period', 'plot', 'sampled'])
 for unique_period in short_periods:
     short_period_data = raw_sample_data[raw_sample_data['period'] == unique_period]
     short_period_plots = set(short_period_data['plot'].unique())
     missing_plots = set(plot_list).difference(short_period_plots)
     for each_plot in missing_plots:
-        plot_data = pd.DataFrame([[unique_period, each_plot, 4, 0]],
-                                 columns=['period', 'plot', 'note1', 'sampled'])
+        plot_data = pd.DataFrame([[unique_period, each_plot, 0]],
+                                 columns=['period', 'plot', 'sampled'])
         new_data = new_data.append(plot_data, ignore_index=True)
-        
+Trapping_Table = Trapping_Table.append(new_data, ignore_index=True)
+

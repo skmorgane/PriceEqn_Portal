@@ -36,8 +36,6 @@ Trapping_Table['sampled'] = 1
 
 #generate list of periods with fewer than 24 plots recorded
 period_list = raw_sample_data['period'].unique()
-plot_list = raw_sample_data['plot'].unique()
-period_list = raw_sample_data['period'].unique()
 plot_counts = raw_sample_data.groupby('period').plot.nunique()
 plot_counts = pd.DataFrame(plot_counts)
 plot_counts = plot_counts.rename(columns = {'plot':'plot_count'})

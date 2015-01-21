@@ -4,6 +4,8 @@ import numpy as np
 import matplotlib as plt
 import json
 
+###### FUNCTIONS
+
 def check_for_missing_periods(data):
     Periods_unique=data.unique()
     Total_periods =data.max() - (data.min() - 1)
@@ -13,8 +15,11 @@ def check_for_missing_periods(data):
     else:
         outcome = "No Missing Periods"
     return outcome
+######  MAIN CODE
 
-#extracting just the raw data needed for the project from Portal Database on Server
+###### Steps for Extracting and Processing Rodent Data
+#extracting the subset of raw data needed for the project from Portal Database 
+#on server
 query_rats = """SELECT Rodents.mo, Rodents.dy, Rodents.yr, Rodents.period, Rodents.plot, Plots.`Type Code`, Rodents.note1, Rodents.species, Rodents.wgt 
            FROM Rodents JOIN Plots JOIN SPECIES
            ON Rodents.plot=Plots.`Plot Number`
@@ -38,6 +43,10 @@ print check_for_missing_periods(raw_data['period'])
 
 #uses individual mass to calculate an individual's energy use
 raw_data['energy'] = 5.69 * raw_data['wgt'] ** 0.75
+
+#####Steps for Importing Trapping Table & Calculating Number of Plots Trapped 
+#####During Each Month
+Trapping_Table = pd.read_csv('Trapping_Table.csv')
 
 #calculates mean energy use per species per plot for each trapping session
 plot_sums = raw_data[['period', 'plot', 'Type', 'species', 'energy']].groupby(['period', 'plot', 'Type', 'species']).sum()

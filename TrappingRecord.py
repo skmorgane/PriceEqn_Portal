@@ -34,8 +34,7 @@ raw_sample_data = raw_sample_data.dropna(subset=["period"])
 Trapping_Table = raw_sample_data.drop_duplicates()
 Trapping_Table['sampled'] = 1
 
-#generate table showing which periods are missing plots
-plot_list = raw_sample_data['plot'].unique()
+#generate list of periods with fewer than 24 plots recorded
 period_list = raw_sample_data['period'].unique()
 plot_list = raw_sample_data['plot'].unique()
 period_list = raw_sample_data['period'].unique()
@@ -43,7 +42,7 @@ plot_counts = raw_sample_data.groupby('period').plot.nunique()
 plot_counts = pd.DataFrame(plot_counts)
 plot_counts = plot_counts.rename(columns = {'plot':'plot_count'})
 plot_counts.reset_index(inplace=True)
-periods_missing_plots = plot_counts[plot_counts['plot_count'] < len(plot_list)]
+periods_missing_plots = plot_counts[plot_counts['plot_count'] < 24]
 
 #Find missing plots for a particular given period
 short_periods = periods_missing_plots['period'].unique()

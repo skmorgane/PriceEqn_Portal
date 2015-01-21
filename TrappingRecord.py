@@ -55,4 +55,4 @@ for unique_period in short_periods:
                                  columns=['period', 'plot', 'sampled'])
         new_data = new_data.append(plot_data, ignore_index=True)
 Trapping_Table = Trapping_Table.append(new_data, ignore_index=True)
-
+Trapping_Table.to_csv("Trapping_Table.csv")

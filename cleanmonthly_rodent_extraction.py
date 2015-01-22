@@ -15,6 +15,7 @@ def check_for_missing_periods(data):
     else:
         outcome = "No Missing Periods"
     return outcome
+
 ######  MAIN CODE
 
 ###### Steps for Extracting and Processing Rodent Data
@@ -38,7 +39,7 @@ print check_for_missing_periods(raw_data['period'])
 
 # inserts species average mass for missing values & calculates individual energy use
 raw_data['wgt'] = raw_data[['species','wgt']].groupby("species").transform(lambda x: x.fillna(x.mean()))
-raw_data['Type'] = np.where(raw_data['Type Code'] == 'CO', 1, 0)
+raw_data['Type'] = raw_data['Type Code'].map({'CO': 0, 'LK': 1, 'RE':2, 'SK':1})
 raw_data['energy'] = 5.69 * raw_data['wgt'] ** 0.75
 
 ##### Steps for Calculating Treatment Average Energy Use Per Species
@@ -47,11 +48,12 @@ raw_data['energy'] = 5.69 * raw_data['wgt'] ** 0.75
 # plots censused per period
 Trapping_Table = pd.read_csv('Trapping_Table.csv')
 Trapping_Table = pd.merge(Trapping_Table, plot_info, how='left', on='plot')
-Trapping_Table['Type Code'] = Trapping_Table['Type Code'].map({'CO': 0, 'LK': 1, 'RE':2, 'SK':1})
-period_plot_count = Trapping_Table[['period', 'Type Code', 'sampled']].groupby(['period', 'Type Code']).sum()
+Trapping_Table['Type'] = Trapping_Table['Type Code'].map({'CO': 0, 'LK': 1, 'RE':2, 'SK':1})
+period_plot_count = Trapping_Table[['period', 'Type', 'sampled']].groupby(['period', 'Type']).sum()
 period_plot_count.reset_index(inplace=True)
 
 # calculates mean energy use per species per plot for each trapping session
-plot_sums = raw_data[['period', 'plot', 'Type', 'species', 'energy']].groupby(['period', 'plot', 'Type', 'species']).sum()
-plot_sums.reset_index(inplace=True)
-plot_sums = pd.merge(plot_sums, period_plot_count, how='left', on='period')
+treatment_sums = raw_data[['period', 'plot', 'Type', 'species', 'energy']].groupby(['period', 'Type', 'species']).sum()
+treatment_sums.reset_index(inplace=True)
+treatment_sums = pd.merge(treatment_sums, period_plot_count, how='left', on=['period', 'Type'])
+treatment_sums['average'] = treatment_sums['energy']/treatment_sums['sampled']

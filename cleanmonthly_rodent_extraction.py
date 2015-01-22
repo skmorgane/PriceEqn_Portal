@@ -33,20 +33,25 @@ credentials = json.load(open("db_credentials.json", "r"))
 engine = sqlalchemy.create_engine('mysql+pymysql://morgan:{}@{}:{}/{}'.format(credentials['password'], credentials['host'], credentials['port'], credentials['database']))
 raw_data=pd.read_sql_query(query_rats, engine)
 plot_info = pd.read_sql_table("Plots", engine)
+plot_info.rename(columns={'Plot Number': 'plot'}, inplace=True)
 print check_for_missing_periods(raw_data['period'])
 
-#inserts species average mass for missing values & calculates individual energy use
+# inserts species average mass for missing values & calculates individual energy use
 raw_data['wgt'] = raw_data[['species','wgt']].groupby("species").transform(lambda x: x.fillna(x.mean()))
 raw_data['Type'] = np.where(raw_data['Type Code'] == 'CO', 1, 0)
 raw_data['energy'] = 5.69 * raw_data['wgt'] ** 0.75
 
-#####Steps for Calculating Treatment Average Energy Use Per Species
+##### Steps for Calculating Treatment Average Energy Use Per Species
 
-#importing trapping table & calculating number of plots censused per period
+# importing trapping table, adding plot type info to table, calculating number of
+# plots censused per period
 Trapping_Table = pd.read_csv('Trapping_Table.csv')
-Plots_censused = Trapping_Table[['period', 'sampled']].groupby(['period']).sum()
+Trapping_Table = pd.merge(Trapping_Table, plot_info, how='left', on='plot')
+Trapping_Table['Type Code'] = Trapping_Table['Type Code'].map({'CO': 0, 'LK': 1, 'RE':2, 'SK':1})
+period_plot_count = Trapping_Table[['period', 'Type Code', 'sampled']].groupby(['period', 'Type Code']).sum()
+period_plot_count.reset_index(inplace=True)
 
-#calculates mean energy use per species per plot for each trapping session
+# calculates mean energy use per species per plot for each trapping session
 plot_sums = raw_data[['period', 'plot', 'Type', 'species', 'energy']].groupby(['period', 'plot', 'Type', 'species']).sum()
 plot_sums.reset_index(inplace=True)
-#treatment_avg = plot_sums[['period', 'Type', 'species', 'energy']].groupby(['period', 'Type', 'species']).mean()
+plot_sums = pd.merge(plot_sums, period_plot_count, how='left', on='period')

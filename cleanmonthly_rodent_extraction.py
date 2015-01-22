@@ -27,7 +27,7 @@ query_rats = """SELECT Rodents.mo, Rodents.dy, Rodents.yr,
                 ON Rodents.plot=Plots.`Plot Number`
                 AND Rodents.species=SPECIES.`New Code`
                 WHERE (Plots.`Type Code` != 'RE') 
-                AND (Rodents.period > 0) AND (Rodents.period < 429)
+                AND (Rodents.period > 118) AND (Rodents.period < 429)
                 AND (SPECIES.Rodent = 1)
                 """
 credentials = json.load(open("db_credentials.json", "r"))

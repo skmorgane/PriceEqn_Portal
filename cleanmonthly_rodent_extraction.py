@@ -18,8 +18,8 @@ def check_for_missing_periods(data):
 ######  MAIN CODE
 
 ###### Steps for Extracting and Processing Rodent Data
-#extracting the subset of raw data needed for the project from Portal Database 
-#on server
+
+# extracting the subset of raw data needed for the project from Portal Database on server
 query_rats = """SELECT Rodents.mo, Rodents.dy, Rodents.yr, Rodents.period, Rodents.plot, Plots.`Type Code`, Rodents.note1, Rodents.species, Rodents.wgt 
            FROM Rodents JOIN Plots JOIN SPECIES
            ON Rodents.plot=Plots.`Plot Number`
@@ -33,22 +33,20 @@ credentials = json.load(open("db_credentials.json", "r"))
 engine = sqlalchemy.create_engine('mysql+pymysql://morgan:{}@{}:{}/{}'.format(credentials['password'], credentials['host'], credentials['port'], credentials['database']))
 raw_data=pd.read_sql_query(query_rats, engine)
 plot_info = pd.read_sql_table("Plots", engine)
-
-#inserts species average mass for missing values
-raw_data['wgt'] = raw_data[['species','wgt']].groupby("species").transform(lambda x: x.fillna(x.mean()))
-raw_data['Type'] = np.where(raw_data['Type Code'] == 'CO', 1, 0)
-
-#checking for missing periods
 print check_for_missing_periods(raw_data['period'])
 
-#uses individual mass to calculate an individual's energy use
+#inserts species average mass for missing values & calculates individual energy use
+raw_data['wgt'] = raw_data[['species','wgt']].groupby("species").transform(lambda x: x.fillna(x.mean()))
+raw_data['Type'] = np.where(raw_data['Type Code'] == 'CO', 1, 0)
 raw_data['energy'] = 5.69 * raw_data['wgt'] ** 0.75
 
-#####Steps for Importing Trapping Table & Calculating Number of Plots Trapped 
-#####During Each Month
+#####Steps for Calculating Treatment Average Energy Use Per Species
+
+#importing trapping table & calculating number of plots censused per period
 Trapping_Table = pd.read_csv('Trapping_Table.csv')
+Plots_censused = Trapping_Table[['period', 'sampled']].groupby(['period']).sum()
 
 #calculates mean energy use per species per plot for each trapping session
 plot_sums = raw_data[['period', 'plot', 'Type', 'species', 'energy']].groupby(['period', 'plot', 'Type', 'species']).sum()
 plot_sums.reset_index(inplace=True)
-treatment_avg = plot_sums[['period', 'Type', 'species', 'energy']].groupby(['period', 'Type', 'species']).mean()
+#treatment_avg = plot_sums[['period', 'Type', 'species', 'energy']].groupby(['period', 'Type', 'species']).mean()

@@ -20,13 +20,13 @@ def retrieve_data(query):
 # that indicate the data was not from a normal census. It includes 
 # records tagged as empty plots
 
-query_rats = """SELECT Rodents.period, Rodents.plot FROM Rodents 
-                WHERE (((Rodents.period)>0 AND Rodents.period < 429) AND ((Rodents.note1) Is Null 
-                Or (Rodents.note1)="1" Or (Rodents.note1)="2"
-                Or (Rodents.note1)="3" Or (Rodents.note1)="6" 
-                Or (Rodents.note1)="7" Or (Rodents.note1)="10" 
-                Or (Rodents.note1)="11" Or (Rodents.note1)="12" 
-                Or (Rodents.note1)="13" Or (Rodents.note1)="14"))"""
+query_rats = """SELECT Rodents.yr, Rodents.mo, Rodents.dy, 
+                Rodents.period, Rodents.plot FROM Rodents 
+                WHERE ((Rodents.period)>0 AND Rodents.period < 429) 
+                AND (Rodents.note1 Is Null 
+                OR Rodents.note1 IN ("1", "2", "3", "6", "7", "10", 
+               "11", "12", "13", "14"))
+               """
 raw_sample_data = retrieve_data(query_rats)
 
 # purge null plots and null periods and reduce to unique plot/period 

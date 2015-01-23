@@ -68,6 +68,6 @@ treatment_sums = pd.merge(treatment_sums, period_plot_count, how='left',
 treatment_sums['average'] = treatment_sums['energy']/treatment_sums['sampled']
 
 # formatting and output for analysis
-treatment_data_export = treatment_sums.drop(['species', 'plot', 'energy',
-                                             'sampled'], axis=1)
+treatment_data_export = treatment_sums.drop(['plot', 'energy', 'sampled'
+                                             ], axis = 1)
 treatment_data_export.to_csv("Portal_Rodents_PriceProject.csv")

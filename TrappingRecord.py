@@ -2,7 +2,6 @@ import sqlalchemy
 import pandas as pd
 import numpy as np
 import json
-import datetime
 import jdcal
 
 def retrieve_data(query):
@@ -49,12 +48,6 @@ raw_sample_data = raw_sample_data.dropna(subset=["period"])
 Trapping_Table = raw_sample_data.drop_duplicates()
 Trapping_Table['sampled'] = 1
 
-
-# converting date to julian date
-#Trapping_Table["mergeddate"] = Trapping_Table["yr"].map(str) + Trapping_Table["mo"].map(str) + Trapping_Table["dy"].map(str)
-
-
-
 # generate list of periods with fewer than 24 plots recorded
 
 period_list = Trapping_Table['period'].unique()
@@ -82,17 +75,11 @@ for unique_period in short_periods:
         new_data = new_data.append(plot_data, ignore_index=True)
 
 # Add information about missed plots to the trapping table
+
 Trapping_Table = Trapping_Table.append(new_data, ignore_index=True)
 
-# Format dates to be a single entry instead of multiple columns & convert
-# to a US Navy Julian Date
+# Convert Gregorian Date to a Julian Date
 
-
-
-
-#Trapping_Table['date'] = pd.to_datetime((Trapping_Table.yr*10000+Trapping_Table.mo*100+Trapping_Table.dy).apply(str),format='%Y%m%d')
-#fmt = '%Y-%m-%d'
-#test = datetime.datetime.strptime(Trapping_Table['date'], fmt)
 Trapping_Table['JulianDate'] = Trapping_Table.apply(convert_to_JulianDate, axis=1)
 
 

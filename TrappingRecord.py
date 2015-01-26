@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib as plt
 import json
+import datetime
 
 def retrieve_data(query):
     """Connection to the Portal Rodent Database on Serenity & executes a 
@@ -29,14 +30,18 @@ query_rats = """SELECT Rodents.yr, Rodents.mo, Rodents.dy,
                """
 raw_sample_data = retrieve_data(query_rats)
 
-# purge null plots and null periods and reduce to unique plot/period 
-# events & add column denoting that these records are linked to real 
-# trapping events
+# reduce to unique plot/period events & add column denoting that
+# records are linked to real trapping events
 
 raw_sample_data = raw_sample_data.dropna(subset=["plot"])
 raw_sample_data = raw_sample_data.dropna(subset=["period"])
 Trapping_Table = raw_sample_data.drop_duplicates()
 Trapping_Table['sampled'] = 1
+
+# converting date to julian date
+#Trapping_Table["mergeddate"] = Trapping_Table["yr"].map(str) + Trapping_Table["mo"].map(str) + Trapping_Table["dy"].map(str)
+
+
 
 # generate list of periods with fewer than 24 plots recorded
 

@@ -67,7 +67,17 @@ treatment_sums = pd.merge(treatment_sums, period_plot_count, how='left',
                           on=['period', 'Type'])
 treatment_sums['average'] = treatment_sums['energy']/treatment_sums['sampled']
 
+# determines first Julian Date of trapping for each period, processes and merges
+# with data for export
+
+JulianDate_for_period = Trapping_Table[['JulianDate', 
+                                        'period']].groupby(['period']).min()
+JulianDate_for_period['JulianDate'] = JulianDate_for_period['JulianDate'].astype(int)
+JulianDate_for_period.reset_index(inplace=True)
+treatment_sums = pd.merge(treatment_sums, JulianDate_for_period, how='left',
+                          on=['period'])
+
 # formatting and output for analysis
-treatment_data_export = treatment_sums.drop(['plot', 'energy', 'sampled'
-                                             ], axis = 1)
+treatment_data_export = treatment_sums.drop(['plot', 'energy', 'sampled'], 
+                                            axis = 1)
 treatment_data_export.to_csv("Portal_Rodents_PriceProject.csv")

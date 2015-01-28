@@ -1,7 +1,6 @@
 import sqlalchemy
 import pandas as pd
 import numpy as np
-import matplotlib as plt
 import json
 
 ###### FUNCTIONS

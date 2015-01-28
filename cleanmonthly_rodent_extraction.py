@@ -80,4 +80,11 @@ treatment_sums = pd.merge(treatment_sums, JulianDate_for_period, how='left',
 # formatting and output for analysis
 treatment_data_export = treatment_sums.drop(['plot', 'energy', 'sampled'], 
                                             axis = 1)
+treatment_data_export = treatment_data_export[(treatment_data_export['species'] != 'DX')
+                                              & (treatment_data_export['species'] != 'PX')
+                                              & (treatment_data_export['species'] != 'RX')
+                                              & (treatment_data_export['species'] != 'OX')
+                                              & (treatment_data_export['species'] != 'UR')
+                                              & (treatment_data_export['species'] != 'SX')]
+                                              
 treatment_data_export.to_csv("Portal_Rodents_PriceProject.csv")

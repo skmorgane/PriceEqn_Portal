@@ -22,8 +22,8 @@ def convert_to_JulianDate(row):
     """Takes each row of the Trapping_Table dataframe and applies the 
     Gregorian Date to Julian Date Converter"""
     
-    return int(sum(jdcal.gcal2jd(int(row['yr']), int(row['mo']), 
-                             int(row['dy'])))) 
+    return sum(jdcal.gcal2jd(int(row['yr']), int(row['mo']), 
+                             int(row['dy']))) 
 
 
 # Load Data and and Add 1 to denote that an existing record represents a 
@@ -63,15 +63,17 @@ plot_list = Trapping_Table['plot'].unique()
 short_periods = periods_missing_plots['period'].unique()
 new_data = pd.DataFrame(columns=['period', 'plot', 'sampled'])
 for unique_period in short_periods:
-    short_period_data = raw_sample_data[raw_sample_data['period'] == unique_period]
+    short_period_data = raw_sample_data[raw_sample_data['period'] == 
+                                        unique_period]
     short_period_plots = set(short_period_data['plot'].unique())
     missing_plots = set(plot_list).difference(short_period_plots)
     year = int(short_period_data['yr'].min())   #first year of trapping period
     month = int(short_period_data['mo'].min())  #first month of trapping period
     day = int(short_period_data['dy'].min())    #first day of trapping period
     for each_plot in missing_plots:
-        plot_data = pd.DataFrame([[year, month, day, unique_period, each_plot, 0]],
-                                 columns=['yr', 'mo', 'dy','period', 'plot', 'sampled'])
+        plot_data = pd.DataFrame([[year, month, day, unique_period, each_plot, 
+                                   0]], columns=['yr', 'mo', 'dy','period', 
+                                                 'plot', 'sampled'])
         new_data = new_data.append(plot_data, ignore_index=True)
 
 # Add information about missed plots to the trapping table

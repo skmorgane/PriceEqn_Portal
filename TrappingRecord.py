@@ -22,8 +22,8 @@ def convert_to_JulianDate(row):
     """Takes each row of the Trapping_Table dataframe and applies the 
     Gregorian Date to Julian Date Converter"""
     
-    return sum(jdcal.gcal2jd(int(row['yr']), int(row['mo']), 
-                             int(row['dy']))) 
+    return int(sum(jdcal.gcal2jd(int(row['yr']), int(row['mo']), 
+                             int(row['dy'])))) 
 
 
 # Load Data and and Add 1 to denote that an existing record represents a 
@@ -33,7 +33,7 @@ def convert_to_JulianDate(row):
 
 query_rats = """SELECT Rodents.yr, Rodents.mo, Rodents.dy, 
                 Rodents.period, Rodents.plot FROM Rodents 
-                WHERE ((Rodents.period)>0 AND Rodents.period < 429) 
+                WHERE ((Rodents.period)>0) 
                 AND (Rodents.note1 Is Null 
                 OR Rodents.note1 IN ("1", "2", "3", "6", "7", "10", 
                "11", "12", "13", "14"))
@@ -57,7 +57,7 @@ plot_counts = plot_counts.rename(columns = {'plot':'plot_count'})
 plot_counts.reset_index(inplace=True)
 periods_missing_plots = plot_counts[plot_counts['plot_count'] < 24]
 
-# Find missing plots for a particular given period
+# Find missing plots for a particular given period & collect information on them
 
 plot_list = Trapping_Table['plot'].unique()
 short_periods = periods_missing_plots['period'].unique()
@@ -66,9 +66,9 @@ for unique_period in short_periods:
     short_period_data = raw_sample_data[raw_sample_data['period'] == unique_period]
     short_period_plots = set(short_period_data['plot'].unique())
     missing_plots = set(plot_list).difference(short_period_plots)
-    year = int(short_period_data['yr'].unique())
-    month = int(short_period_data['mo'].unique())
-    day = int(short_period_data['dy'].min())    #first day of trapping session selected
+    year = int(short_period_data['yr'].min())   #first year of trapping period
+    month = int(short_period_data['mo'].min())  #first month of trapping period
+    day = int(short_period_data['dy'].min())    #first day of trapping period
     for each_plot in missing_plots:
         plot_data = pd.DataFrame([[year, month, day, unique_period, each_plot, 0]],
                                  columns=['yr', 'mo', 'dy','period', 'plot', 'sampled'])
@@ -82,6 +82,5 @@ Trapping_Table = Trapping_Table.append(new_data, ignore_index=True)
 
 Trapping_Table['JulianDate'] = Trapping_Table.apply(convert_to_JulianDate, axis=1)
 
-
-# Formatting Table for Export and Export
+# Export
 Trapping_Table.to_csv("Trapping_Table.csv")

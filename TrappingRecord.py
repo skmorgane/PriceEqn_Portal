@@ -4,13 +4,24 @@ import numpy as np
 import json
 import jdcal
 
+###### FUNCTIONS
+
 def retrieve_data(query):
     
-    """Connection to the Portal Rodent Database on Serenity & executes a 
-    mySQL query and returns the data in a Pandas dataframe. This 
+    """Execute SQL Query on Portal Rodent Database on Serenity 
+       
+    Executes a mySQL query and returns the data in a Pandas dataframe. This 
     function is currently constructed to work for a specific user and 
     only if the JSON file "db_credentials" for accessing the database is
-    in the same folder"""
+    in the same folder
+
+    Args:
+        query: a doc string containing the sql query being sent to the sql 
+        database
+    
+    Returns:
+        data: the data extracted using the query in a pandas dataframe format
+    """
     
     credentials = json.load(open("db_credentials.json", "r"))
     engine = sqlalchemy.create_engine('mysql+pymysql://morgan:{}@{}:{}/{}'.format(credentials['password'], credentials['host'], credentials['port'], credentials['database']))
@@ -19,12 +30,24 @@ def retrieve_data(query):
 
 def convert_to_JulianDate(row):
     
-    """Takes each row of the Trapping_Table dataframe and applies the 
-    Gregorian Date to Julian Date Converter"""
+    """Creates Julian Dates
+    
+    Takes each row of the Trapping_Table dataframe and applies the 
+    Julian Date Converter to the Gregorian Date
+    
+    Args:
+        row: a row from a pandas dataframe containing a separate columns for
+            year, month, day
+    
+    Returns:
+        a single numeric value representing the Julian Date of the year, month,
+        day given to the function
+        """
     
     return sum(jdcal.gcal2jd(int(row['yr']), int(row['mo']), 
                              int(row['dy']))) 
 
+###### MAIN CODE
 
 # Load Data and and Add 1 to denote that an existing record represents a 
 # trapping event. Query excludes negative periods and records with notes 
@@ -40,7 +63,7 @@ query_rats = """SELECT Rodents.yr, Rodents.mo, Rodents.dy,
                """
 raw_sample_data = retrieve_data(query_rats)
 
-# reduce to unique plot/period events & add column denoting that
+# Reduce to unique plot/period events & add column denoting that
 # records are linked to real trapping events
 
 raw_sample_data = raw_sample_data.dropna(subset=["plot"])
@@ -48,7 +71,7 @@ raw_sample_data = raw_sample_data.dropna(subset=["period"])
 Trapping_Table = raw_sample_data.drop_duplicates()
 Trapping_Table['sampled'] = 1
 
-# generate list of periods with fewer than 24 plots recorded
+# Generate list of periods with fewer than 24 plots recorded
 
 period_list = Trapping_Table['period'].unique()
 plot_counts = Trapping_Table.groupby('period').plot.nunique()
@@ -76,13 +99,11 @@ for unique_period in short_periods:
                                                  'plot', 'sampled'])
         new_data = new_data.append(plot_data, ignore_index=True)
 
-# Add information about missed plots to the trapping table
+# Add information about missed plots & Julian Date to the trapping table
 
 Trapping_Table = Trapping_Table.append(new_data, ignore_index=True)
-
-# Convert Gregorian Date to a Julian Date
-
 Trapping_Table['JulianDate'] = Trapping_Table.apply(convert_to_JulianDate, axis=1)
 
 # Export
+
 Trapping_Table.to_csv("Trapping_Table.csv")
